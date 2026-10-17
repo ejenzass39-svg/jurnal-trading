@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.application'
+}
+android {
+    namespace 'com.jurnal.trading'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.jurnal.trading'
+        minSdk 24
+        targetSdk 34
+        versionCode 2
+        versionName '1.1'
+    }
+    signingConfigs {
+        debug {
+            storeFile file('jurnal.keystore')
+            storePassword 'jurnal123'
+            keyAlias 'jurnal'
+            keyPassword 'jurnal123'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
