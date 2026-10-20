@@ -20,6 +20,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -112,6 +117,34 @@ public class MainActivity extends Activity {
 
     /** Dipanggil dari JavaScript: ekspor JSON/CSV ke folder Download. */
     private class Bridge {
+        @JavascriptInterface
+        public void fetchNews() {
+            new Thread(() -> {
+                String err = "gagal";
+                String[] urls = {"https://nfs.faireconomy.media/ff_calendar_thisweek.json", "https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.json"};
+                for (String u : urls) {
+                    try {
+                        HttpURLConnection c = (HttpURLConnection) new URL(u).openConnection();
+                        c.setConnectTimeout(10000);
+                        c.setReadTimeout(15000);
+                        c.setRequestProperty("User-Agent", "Mozilla/5.0");
+                        int code = c.getResponseCode();
+                        if (code != 200) { err = "HTTP " + code; continue; }
+                        BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8));
+                        StringBuilder sb = new StringBuilder();
+                        String l;
+                        while ((l = br.readLine()) != null) sb.append(l);
+                        br.close();
+                        final String ok = "newsDone(" + JSONObject.quote(sb.toString()) + ")";
+                        runOnUiThread(() -> web.evaluateJavascript(ok, null));
+                        return;
+                    } catch (Exception e) { err = String.valueOf(e.getMessage()); }
+                }
+                final String bad = "newsFail(" + JSONObject.quote(err) + ")";
+                runOnUiThread(() -> web.evaluateJavascript(bad, null));
+            }).start();
+        }
+
         @JavascriptInterface
         public String loadData() {
             return getSharedPreferences("jurnal", MODE_PRIVATE).getString("data", "");
